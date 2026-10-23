@@ -1,0 +1,132 @@
+[
+  {
+    "shopId": "shop_dfa25fc93470a47ba753e216",
+    "shopName": "وییس رامنوش",
+    "categoryOffers": 39,
+    "duplicateSameProductPairs": [
+      {
+        "product_id": "product_2b247ad6d239fe576c390801",
+        "count": 2
+      },
+      {
+        "product_id": "product_36266787faad175639d75ecb",
+        "count": 2
+      },
+      {
+        "product_id": "product_673dc95bb5b6c7fe81c6cbb9",
+        "count": 2
+      },
+      {
+        "product_id": "product_a1b5fa84f402af8f696f70c5",
+        "count": 3
+      },
+      {
+        "product_id": "product_d3c0d209ce0f51392a7c8904",
+        "count": 2
+      }
+    ],
+    "firstProducts": [
+      {
+        "id": "offer_1d6d6960b894fa5a685d36b2",
+        "product_id": "product_32a547f3723a22c4158a2431",
+        "price": 262570.0,
+        "changed": "2026-10-05T07:37:46.529840+00:00",
+        "title": "چراغ سقفی مودی مدل IR-MD4607 ظرفیت ۷ وات آفتابی و مهتابی",
+        "category": "چراغ پنلی و سقفی"
+      },
+      {
+        "id": "offer_89c27c6235a43b5caf84c842",
+        "product_id": "product_71d59badf04a48a6aadb03be",
+        "price": 888140.0,
+        "changed": "2026-10-05T07:43:51.192732+00:00",
+        "title": "چراغ سقفی توکار اپتونیکا مدل IR-OP5630R ظرفیت ۳۰ وات",
+        "category": "چراغ پنلی و سقفی"
+      },
+      {
+        "id": "offer_cad825da9fae5c8f873b8a5d",
+        "product_id": "product_df39fe4d9b5f4c67e38613fd",
+        "price": 948640.0,
+        "changed": "2026-10-05T07:54:14.906092+00:00",
+        "title": "چراغ سقفی سنسور دار مودی ۲۲ وات گرد",
+        "category": "چراغ پنلی و سقفی"
+      },
+      {
+        "id": "offer_a3af831bf0c406ed2133ae44",
+        "product_id": "product_97b60417ffd37ce2d2c86ca4",
+        "price": 1046650.0,
+        "changed": "2026-10-05T07:12:31.887482+00:00",
+        "title": "براکت 40 وات 60 سانتی ویمکس IR-V3440-K",
+        "category": "چراغ پنلی و سقفی"
+      },
+      {
+        "id": "offer_7b8b390c27be561c7e026aa2",
+        "product_id": "product_fe5fe1756558e5043a98c4a3",
+        "price": 3373000.0,
+        "changed": "2026-09-07T15:02:46.729877+00:00",
+        "title": "چراغ سقفی 72 وات گرد طرح خورشید مودی",
+        "category": "چراغ پنلی و سقفی"
+      },
+      {
+        "id": "offer_0f2af73ed58d656816600cdb",
+        "product_id": "product_0a191b01b8bd0bd4de678659",
+        "price": 4155550.0,
+        "changed": "2026-10-05T08:12:23.376944+00:00",
+        "title": "چراغ سقفی 72 وات گرد رزگلد مودی",
+        "category": "چراغ پنلی و سقفی"
+      },
+      {
+        "id": "offer_5636267012042e8b95b82fd0",
+        "product_id": "product_8381120149f80c5a5b5947a8",
+        "price": 4250730.0,
+        "changed": "2026-10-05T07:41:15.281562+00:00",
+        "title": "پنل توکار 60 در 60 بک لایت 120 وات مودی",
+        "category": "چراغ پنلی و سقفی"
+      },
+      {
+        "id": "offer_dc343f0009143c2dd6a263d8",
+        "product_id": "product_e83c87c829125556121e7991",
+        "price": 4580120.0,
+        "changed": "2026-10-05T08:12:32.554857+00:00",
+        "title": "چراغ سقفی ۷۲ وات مربع ماه و ستاره ویمکس",
+        "category": "چراغ پنلی و سقفی"
+      },
+      {
+        "id": "offer_b6927a53d3d6e7115e985caf",
+        "product_id": "product_d28e67182342b5dc1e6e74a3",
+        "price": 4580120.0,
+        "changed": "2026-10-05T08:10:54.943399+00:00",
+        "title": "چراغ سقفی ویمکس ۷۲ وات مدل مربع مینیمال",
+        "category": "چراغ پنلی و سقفی"
+      },
+      {
+        "id": "offer_f7803b2fea68ec712caccd30",
+        "product_id": "product_e821e634d4813a6ed912e9dd",
+        "price": 4580120.0,
+        "changed": "2026-10-05T08:10:45.329884+00:00",
+        "title": "چراغ سقفی مودی مدل 6272B ظرفیت ۷۲ وات چهار حالته",
+        "category": "چراغ پنلی و سقفی"
+      },
+      {
+        "id": "offer_a73ae04e173980c7a9a25281",
+        "product_id": "product_caf57f791d167290f28ae259",
+        "price": 4580120.0,
+        "changed": "2026-10-05T08:10:40.720326+00:00",
+        "title": "چراغ سقفی ویمکس مدل IR-V6272R-D ظرفیت ۷۲ وات طرح خورشید چهار حالته",
+        "category": "چراغ پنلی و سقفی"
+      },
+      {
+        "id": "offer_2fea54f63ee4c9e7dbf10b54",
+        "product_id": "product_59721f0239b8ddb97a28841e",
+        "price": 6534000.0,
+        "changed": "2026-10-05T07:40:48.522993+00:00",
+        "title": "چراغ سقفی COB ال ای دی ۸۰ وات ویمکس",
+        "category": "چراغ پنلی و سقفی"
+      }
+    ],
+    "rawCsvVerification": {
+      "file": "offers.csv",
+      "shopOfferRows": 168,
+      "matchingFirstProductOffers": 12
+    }
+  }
+]

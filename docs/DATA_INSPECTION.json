@@ -1,0 +1,110 @@
+{
+  "files": {
+    "shops": {
+      "columns": [
+        "address",
+        "category_names",
+        "contacts",
+        "instagram",
+        "lat",
+        "location_label",
+        "lon",
+        "name",
+        "payment_options",
+        "shop_id",
+        "supports_fast_delivery",
+        "website_url",
+        "weekly_hours"
+      ],
+      "rows": 6476,
+      "missing": {
+        "instagram": 6454,
+        "supports_fast_delivery": 4875,
+        "website_url": 6386,
+        "address": 1,
+        "location_label": 1
+      },
+      "sample": [
+        {
+          "address": "خیابان جمهوری، نبش شیخ هادی، پاساژ علالدین 2، طبقه 6، واحد 622",
+          "category_names": "[\"دوربین مدار بسته\",\"ضبط کننده ویدیویی دوربین‌های نظارتی و امنیتی\",\"دوربین خودرو و موتور سیکلت\",\"دوربین و مانیتور کنترل کودک\",\"دوربین امنیتی خورشیدی\",\"دوربین مخفی\",\"هارد دیسک اینترنال\",\"آداپتور برق\",\"پکیج سیستم‌های نظارتی و امنیتی\",\"تجهیزات فیبر نوری\",\"دزدگیر اماکن و لوازم جانبی\",\"منبع تغذیه UPS\",\"جارو رباتیک\",\"چشمی درب\",\"آینه مانیتور دار خودرو\",\"دوربین آندوسکوپی\",\"لوازم جانبی سیستم‌های نظارتی و امنیتی\",\"سایر سیم کارت ها و خطوط تلفن\"]",
+          "instagram": "null",
+          "lat": "35.694991526310005",
+          "location_label": "شیخ هادی",
+          "lon": "51.407137248405895",
+          "name": "فرورا رویس",
+          "payment_options": "[]",
+          "shop_id": "shop_3f93a30a9e66c6dece07cdff",
+          "supports_fast_delivery": "null",
+          "website_url": "null",
+          "weekly_hours": "{\"fri\":{\"shifts\":[{\"end_time\":\"00:00:00\",\"start_time\":\"00:00:00\"}],\"status\":\"closed\"},\"mon\":{\"shifts\":[{\"end_time\":\"19:00:00\",\"start_time\":\"10:00:00\"}],\"status\":\"declared\"},\"sat\":{\"shifts\":[{\"end_time\":\"00:00:00\",\"start_time\":\"00:00:00\"}],\"status\":\"closed\"},\"sun\":{\"shifts\":[{\"end_time\":\"19:00:00\",\"start_time\":\"10:00:00\"}],\"status\":\"declared\"},\"thu\":{\"shifts\":[{\"end_time\":\"14:00:00\",\"start_time\":\"10:00:00\"}],\"status\":\"declared\"},\"tue\":{\"shifts\":[{\"end_time\":\"19:00:00\",\"start_time\":\"10:00:00\"}],\"status\":\"declared\"},\"wed\":{\"shifts\":[{\"end_time\":\"19:00:00\",\"start_time\":\"10:00:00\"}],\"status\":\"declared\"}}"
+        }
+      ]
+    },
+    "products": {
+      "columns": [
+        "brand_name",
+        "category_name",
+        "image_urls",
+        "model",
+        "persian_title",
+        "product_id",
+        "specs"
+      ],
+      "rows": 225903,
+      "missing": {
+        "model": 221847,
+        "brand_name": 168269,
+        "persian_title": 2
+      },
+      "sample": [
+        {
+          "brand_name": "سونی",
+          "category_name": "لنز دوربین",
+          "image_urls": "[\"https://image.torob.com/base/images/Ih/rU/IhrUr41_4rIdS9M9.jpg\",\"https://image.torob.com/base/images/c-/gx/c-gxsEhEfJK9ti84.jpg\"]",
+          "model": "null",
+          "persian_title": "لنز دوربین سونی مدل E 70-350mm f/4.5-6.3 G OSS",
+          "product_id": "product_47796232454501a5e8179e26",
+          "specs": "[{\"key\":\"نام محصول\",\"section\":\"مشخصات کلی\",\"value\":\"Sony E 70-350mm f/4.5-6.3 G OSS\"},{\"key\":\"شرکت سازنده\",\"section\":\"مشخصات کلی\",\"value\":\"Sony\"},{\"key\":\"تاریخ معرفی\",\"section\":\"مشخصات کلی\",\"value\":\"Aug 28, 2019\"},{\"key\":\"رنگ\",\"section\":\"مشخصات کلی\",\"value\":\"مشکی\"},{\"key\":\"وزن\",\"section\":\"مشخصات کلی\",\"value\":\"625 گرم\"},{\"key\":\"طول لنز\",\"section\":\"مشخصات کلی\",\"value\":\"142 میلیمتر\"},{\"key\":\"قطر لنز\",\"section\":\"مشخصات کلی\",\"value\":\"77 میلیمتر\"},{\"key\":\"جنس بدنه\",\"section\":\"مشخصات کلی\",\"value\":\"پلاستیک و فلز\"},{\"key\":\"کاربرد لنز\",\"section\":\"مشخصات کلی\",\"value\":\"تله زوم\"},{\"key\":\"روش زوم\",\"section\":\"مشخصات کلی\",\"value\":\"بیرونی\"},{\"key\":\"قفل زوم\",\"section\":\"مشخصات کلی\",\"value\":\"دارد\"},{\"key\":\"دهانه نصب\",\"section\":\"مشخصات کلی\",\"value\":\"Sony E\"},{\"key\":\"فرمت دوربین قابل استفاده\",\"section\":\"مشخصات کلی\",\"value\":\"APS-C\"},{\"key\":\"فاصله کانونی\",\"section\":\"مشخصات کلی\",\"value\":\"70-350 میلیمتر\"},{\"key\":\"بازترین دیافراگم\",\"section\":\"مشخصات کلی\",\"value\":\"f/4.5_f/6.3\"},{\"key\":\"بسته ترین دیافراگم\",\"section\":\"مشخصات کلی\",\"value\":\"f/22_f/32\"},{\"key\":\"تعداد تیغه ها\",\"section\":\"مشخصات کلی\",\"value\":\"7\"},{\"key\":\"لرزشگیر\",\"section\":\"مشخصات کلی\",\"value\":\"دارد\"},{\"key\":\"تعداد عناصر اپتیکی\",\"section\":\"مشخصات کلی\",\"value\":\"19\"},{\"key\":\"تعداد گروههای اپتیکی\",\"section\":\"مشخصات کلی\",\"value\":\"13\"},{\"key\":\"عناصر ویژه اپتیکی\",\"section\":\"مشخصات کلی\",\"value\":\"1 المان آسفریکال\"},{\"key\":\"فوکوس اتوماتیک\",\"section\":\"مشخصات کلی\",\"value\":\"بله\"},{\"key\":\"روش فوکوس\",\"section\":\"مشخصات کلی\",\"value\":\"بیرونی\"},{\"key\":\"نوع موتور فوکوس\",\"section\":\"مشخصات کلی\",\"value\":\"موتور خطی\"},{\"key\":\"حداقل فاصله فوکوس\",\"section\":\"مشخصات کلی\",\"value\":\"110 سانتیمتر\"},{\"key\":\"حداکثر بزرگنمایی\",\"section\":\"مشخصات کلی\",\"value\":\"0.23 برابر\"},{\"key\":\"فوکوس دستی دائم\",\"section\":\"مشخصات کلی\",\"value\":\"بله\"},{\"key\":\"مقیاس فاصله\",\"section\":\"مشخصات کلی\",\"value\":\"ندارد\"},{\"key\":\"مقیاس عمق میدان\",\"section\":\"مشخصات کلی\",\"value\":\"ندارد\"},{\"key\":\"اندازه فیلتر (میلیمتر)\",\"section\":\"مشخصات کلی\",\"value\":\"67\"},{\"key\":\"ضد نفوذ\",\"section\":\"مشخصات کلی\",\"value\":\"بله\"},{\"key\":\"مدل هود\",\"section\":\"مشخصات کلی\",\"value\":\"ALC-SH160\"},{\"key\":\"حلقه نصب بر روی سه پایه\",\"section\":\"مشخصات کلی\",\"value\":\"ندارد\"},{\"key\":\"نوع لنز\",\"section\":\"مشخصات کلی\",\"value\":\"لنز متغیر (زوم)\"},{\"key\":\"زوم الکتریکی\",\"section\":\"مشخصات کلی\",\"value\":\"ندارد\"},{\"key\":\"هود همراه\",\"section\":\"مشخصات کلی\",\"value\":\"دارد\"},{\"key\":\"ابعاد کل\",\"section\":\"مشخصات کلی\",\"value\":\"21.33x12.19x10.16 سانتی متر\"},{\"key\":\"وزن کل\",\"section\":\"مشخصات کلی\",\"value\":\"862 گرم\"}]"
+        }
+      ]
+    },
+    "offers": {
+      "columns": [
+        "description",
+        "last_price_changed_at",
+        "offer_id",
+        "price_toman",
+        "product_id",
+        "seller_title",
+        "shop_id",
+        "warranty"
+      ],
+      "rows": 331506,
+      "missing": {
+        "description": 293129,
+        "warranty": 272563,
+        "price_toman": 15083,
+        "last_price_changed_at": 769
+      },
+      "sample": [
+        {
+          "description": "",
+          "last_price_changed_at": "2026-09-14T08:57:27.401253+00:00",
+          "offer_id": "offer_98512b2127469a2d20a64b3b",
+          "price_toman": "610000",
+          "product_id": "product_af3172caa21dd9a3e40e6349",
+          "seller_title": "کوپلر برنجی - اتصال دهنده میله ارت - آچارخور سایز 16",
+          "shop_id": "shop_d9a17ad60b0fd5c15bbe2f0a",
+          "warranty": "null"
+        }
+      ]
+    }
+  },
+  "source": "dataset",
+  "currency": "تومان",
+  "normalization": "NFKC; Persian yeh/kaf; ZWNJ to space",
+  "orphanOffers": 0,
+  "invalidCoordinates": 0,
+  "importSeconds": 15.02
+}

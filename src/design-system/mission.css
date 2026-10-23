@@ -1,0 +1,402 @@
+.shopping-mission {
+  display: grid;
+  gap: 20px;
+  max-width: 1100px;
+  margin-inline: auto;
+}
+.workspace-tabs button.active {
+  color: var(--accent-text);
+}
+.mission-heading,
+.mission-form-actions,
+.mission-time-row,
+.mission-controls,
+.mission-primary-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.mission-heading h2 {
+  margin: 0;
+}
+.mission-form {
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  display: grid;
+  gap: 16px;
+}
+.mission-editor {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.mission-editor > summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 18px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.mission-editor > summary b {
+  font-size: 11px;
+  color: var(--accent-text);
+  white-space: nowrap;
+}
+.mission-editor .mission-form {
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+}
+.mission-stock {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 8px;
+}
+.mission-form .field {
+  margin: 0;
+}
+.mission-clarification {
+  padding: 12px;
+  background: var(--soft);
+  border-radius: 12px;
+}
+.mission-time-row .field {
+  flex: 1;
+  min-width: 0;
+}
+.mission-form input[type="datetime-local"] {
+  direction: ltr;
+  text-align: right;
+}
+.mission-preferences summary,
+.mission-all-options summary,
+.mission-reports summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 8px 0;
+}
+.mission-preferences[open] {
+  display: grid;
+  gap: 12px;
+}
+.mission-preferences .field {
+  margin-bottom: 12px;
+}
+.mission-controls {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+.mission-controls .segmented button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.mission-chip,
+.outcome-actions > button {
+  border: 1px solid var(--border-strong);
+  border-radius: 20px;
+  padding: 8px 13px;
+  font-size: 11px;
+  background: var(--surface);
+}
+.mission-chip[aria-pressed="true"],
+.outcome-actions > button[aria-pressed="true"] {
+  color: var(--accent-text);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.mission-context,
+.mission-progress {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0;
+}
+.mission-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mission-recommendation {
+  border: 1px solid var(--border-strong);
+  border-radius: 20px;
+  padding: 24px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 18px;
+}
+.mission-recommendation.ready {
+  border-color: var(--success);
+}
+.mission-status {
+  color: var(--warning);
+  font-size: 12px;
+}
+.ready .mission-status {
+  color: var(--success);
+}
+.mission-product {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.mission-product > img,
+.mission-product > .image-placeholder {
+  width: 100px;
+  height: 100px;
+  min-height: 100px;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 12px;
+}
+.mission-product h3 {
+  margin: 0 0 8px;
+}
+.mission-product p {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+.mission-product strong {
+  font-size: 21px;
+}
+.mission-arrival {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 16px;
+  gap: 10px;
+  border-radius: 12px;
+  background: var(--soft);
+}
+.mission-arrival span {
+  color: var(--muted);
+  font-size: 11px;
+}
+.mission-arrival strong {
+  display: block;
+  color: var(--text);
+  margin-top: 7px;
+  font-size: 15px;
+}
+.mission-reason {
+  font-size: 13px;
+  margin: 0;
+}
+.mission-recommendation details {
+  font-size: 12px;
+}
+.mission-recommendation details p {
+  margin-top: 12px;
+  color: var(--muted);
+}
+.mission-specs > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  border-bottom: 1px solid var(--border);
+  padding: 7px 0;
+}
+.mission-specs dd {
+  margin: 0;
+}
+.mission-backup {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  padding: 18px;
+}
+.mission-backup p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.purchase-outcome {
+  border-top: 1px solid var(--border);
+  padding-top: 15px;
+}
+.purchase-outcome h4 {
+  margin: 0 0 12px;
+}
+.purchase-outcome small {
+  display: block;
+  color: var(--muted);
+  margin: 10px 0;
+}
+.outcome-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mission-option-list {
+  max-height: 400px;
+  overflow: auto;
+  display: grid;
+  gap: 10px;
+  padding: 4px;
+}
+.mission-option-list article {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.mission-option-list article > div {
+  flex: 1;
+}
+.mission-option-list h4 {
+  margin: 0 0 5px;
+}
+.mission-option-list p,
+.mission-option-list small {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+.mission-option-list strong {
+  font-size: 12px;
+}
+.mission-option-list .selected,
+.exploration-places .selected {
+  border-color: var(--accent);
+}
+.mission-exploration {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+}
+.mission-exploration > p {
+  color: var(--muted);
+  font-size: 12px;
+}
+.exploration-places {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  gap: 12px;
+  margin-top: 15px;
+}
+.exploration-places article {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 15px;
+}
+.exploration-places h4 {
+  margin: 12px 0;
+}
+.exploration-places p,
+.exploration-places small {
+  font-size: 11px;
+  color: var(--muted);
+}
+.exploration-places article > div {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  font-size: 11px;
+}
+.exploration-places a {
+  text-decoration: underline;
+}
+.mission-reports > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0;
+  font-size: 12px;
+}
+.mission-reports small {
+  display: block;
+  color: var(--muted);
+}
+.mission-complete {
+  border: 1px solid var(--success);
+  border-radius: 16px;
+  background: var(--success-soft);
+  color: var(--success);
+  padding: 25px;
+}
+.mission-error {
+  color: var(--accent-text);
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.suggested .urgent-starter {
+  color: var(--accent-text);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+@media (max-width: 767px) {
+  .shopping-mission {
+    gap: 16px;
+  }
+  .mission-form,
+  .mission-recommendation {
+    padding: 16px;
+  }
+  .mission-form-actions,
+  .mission-primary-actions {
+    flex-wrap: wrap;
+  }
+  .mission-primary-actions .button {
+    flex: 1;
+  }
+  .mission-product {
+    gap: 12px;
+  }
+  .mission-product > img,
+  .mission-product > .image-placeholder {
+    width: 65px;
+    height: 65px;
+    min-height: 65px;
+  }
+  .mission-product strong {
+    font-size: 18px;
+  }
+  .mission-arrival {
+    padding: 12px;
+    gap: 7px;
+  }
+  .mission-arrival strong {
+    font-size: 12px;
+  }
+  .mission-arrival span {
+    font-size: 10px;
+  }
+  .mission-backup {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .mission-option-list article {
+    flex-wrap: wrap;
+  }
+  .mission-option-list article > div {
+    min-width: 100%;
+  }
+  .mission-controls .segmented {
+    width: 100%;
+  }
+  .mission-controls .segmented button {
+    flex: 1;
+    justify-content: center;
+  }
+}

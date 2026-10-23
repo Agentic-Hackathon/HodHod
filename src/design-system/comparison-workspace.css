@@ -1,0 +1,347 @@
+.context-map {
+  position: relative;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--soft);
+}
+.context-map-canvas {
+  height: 340px;
+  width: 100%;
+}
+.radius-picker .context-map {
+  margin: 12px 0;
+}
+.radius-picker .context-map-canvas {
+  height: 220px;
+}
+.context-user,
+.context-shop {
+  display: grid;
+  place-items: center;
+  height: 34px;
+  min-width: 34px;
+  border: 3px solid white;
+  border-radius: 50%;
+  color: white;
+  background: var(--accent);
+  box-shadow: 0 2px 8px #19263844;
+  font:
+    600 13px Vazirmatn,
+    sans-serif;
+  cursor: pointer;
+}
+.context-user {
+  pointer-events: none;
+  z-index: 3;
+  background: #2563eb;
+  padding: 5px;
+  width: 43px;
+  height: 43px;
+}
+.context-user::after {
+  content: "";
+  position: absolute;
+  width: 3px;
+  height: 13px;
+  bottom: -13px;
+  left: calc(50% - 1.5px);
+  background: #2563eb;
+}
+.context-shop.selected {
+  outline: 3px solid var(--text);
+  z-index: 2;
+}
+.context-cluster {
+  background: #344b63;
+  min-width: 40px;
+  height: 40px;
+}
+.context-cluster-picker {
+  position: absolute;
+  right: 12px;
+  bottom: 30px;
+  z-index: 4;
+  width: min(300px, calc(100% - 24px));
+  max-height: 240px;
+  overflow: auto;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  border-radius: 12px;
+  padding: 10px;
+}
+.context-cluster-picker > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+.context-cluster-picker button {
+  background: var(--surface);
+  color: var(--text);
+  border: 0;
+  padding: 9px;
+  text-align: right;
+}
+.context-cluster-picker > button {
+  display: block;
+  width: 100%;
+  border-top: 1px solid var(--border);
+}
+.context-cluster-picker > button:hover,
+.context-cluster-picker > button:focus-visible {
+  background: var(--accent-soft);
+}
+.context-map .context-map-key,
+.context-map .context-map-status {
+  color: var(--text);
+}
+.image-placeholder {
+  color: var(--muted);
+}
+.compare-selection > .image-placeholder,
+.comparison-store-offer > .image-placeholder {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  flex-shrink: 0;
+}
+.compare-selection > .image-placeholder span,
+.comparison-store-offer > .image-placeholder span {
+  display: none;
+}
+.context-map-key,
+.context-map-status {
+  position: absolute;
+  bottom: 25px;
+  right: 12px;
+  left: 12px;
+  width: fit-content;
+  max-width: calc(100% - 24px);
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  font-size: 11px;
+}
+.context-map-status {
+  bottom: 55px;
+}
+.comparison-workspace {
+  display: grid;
+  gap: 24px;
+}
+.comparison-workspace h2,
+.comparison-workspace h3 {
+  margin: 0;
+}
+.comparison-workspace > .segmented {
+  justify-self: start;
+}
+.comparison-sections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.comparison-sections a {
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 9px 16px;
+  color: var(--text-secondary);
+  background: var(--surface);
+  font-size: 12px;
+}
+.comparison-workspace section[id] {
+  scroll-margin-top: 20px;
+  min-width: 0;
+}
+.comparison-geography {
+  display: grid;
+  gap: 16px;
+}
+.comparison-distance-list {
+  max-height: 380px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 3px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 12px;
+}
+.comparison-store {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  background: var(--surface);
+  min-width: 0;
+}
+.comparison-store.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+.comparison-store h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+.store-number {
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  min-width: 28px;
+  height: 28px;
+}
+.comparison-store > strong {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.comparison-store-offer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.comparison-store-offer > img,
+.comparison-store-offer > .product-image {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.comparison-store-offer > span {
+  flex: 1;
+  font-size: 11px;
+  min-width: 0;
+}
+.comparison-store-offer b {
+  display: block;
+  margin-top: 8px;
+}
+.comparison-store-offer .button {
+  padding: 6px 8px;
+  font-size: 10px;
+}
+.comparison-missing {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.compare-tray {
+  position: relative;
+  inset: auto;
+  margin: 8px 20px 12px;
+  flex-shrink: 0;
+  gap: 12px;
+  padding: 10px 12px;
+}
+.compare-tray > span {
+  flex-shrink: 0;
+}
+.compare-mini {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  overflow-x: auto;
+  gap: 8px;
+  padding: 3px;
+}
+.compare-selection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 140px;
+  max-width: 220px;
+  flex: 1 0 140px;
+  background: var(--soft);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 6px;
+}
+.compare-selection > img,
+.compare-selection > .product-image {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 6px;
+}
+.compare-selection > span {
+  font-size: 10px;
+  line-height: 1.8;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+}
+.compare-selection .icon-button {
+  flex-shrink: 0;
+}
+.price-status-filter {
+  margin-bottom: 20px;
+}
+.price-status-filter .segmented {
+  display: flex;
+}
+.price-status-filter .segmented button {
+  flex: 1;
+}
+@media (max-width: 767px) {
+  .compare-tray,
+  .dock-open .compare-tray {
+    position: relative;
+    inset: auto;
+    margin: 5px 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 5px 8px;
+    padding: 8px;
+  }
+  .compare-tray > span {
+    font-size: 10px;
+  }
+  .compare-tray > .button {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .compare-mini {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+  }
+  .compare-selection {
+    flex: 0 0 160px;
+  }
+  .comparison-workspace {
+    gap: 18px;
+  }
+  .comparison-workspace > .segmented {
+    width: 100%;
+  }
+  .comparison-workspace > .segmented button {
+    flex: 1;
+    padding: 8px;
+    font-size: 10px;
+  }
+  .comparison-sections a {
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+  .context-map-canvas {
+    height: 280px;
+  }
+  .price-status-filter .segmented button {
+    font-size: 10px;
+    padding: 8px 4px;
+  }
+}

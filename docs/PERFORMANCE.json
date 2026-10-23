@@ -1,0 +1,24 @@
+{
+  "page": {
+    "seconds": 0.0592,
+    "totalProducts": 225903,
+    "pageProducts": 12,
+    "pageOffers": 23,
+    "jsonBytes": 74447
+  },
+  "nearby_1km": {
+    "seconds": 1.1371,
+    "totalProducts": 97412,
+    "pageProducts": 12,
+    "pageOffers": 27,
+    "jsonBytes": 92897
+  },
+  "payment": {
+    "seconds": 1.2854,
+    "totalProducts": 4563,
+    "pageProducts": 12,
+    "pageOffers": 12,
+    "jsonBytes": 59992
+  },
+  "sqliteBytes": 639893504
+}

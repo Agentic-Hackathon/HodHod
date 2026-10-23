@@ -7,6 +7,7 @@ from . import services
 from .models import Shop,Offer
 from .matching import norm, score_product, retrieval_query
 from .grounded_answer import product_answer, compare_answer, amount, DISCLAIMER
+from .normalization import parse_simple_request
 
 BLOCKED=('پرامپت سیستمت','پرامپت سیستم','system prompt','دستورالعمل محرمانه','شماره همه فروشگاه','شماره تمام فروشگاه')
 
@@ -48,7 +49,8 @@ def _shop_lookup(q):
 
 
 def _search(query,session_key):
-    return services.search_products(query,session_key=session_key)
+    parsed=parse_simple_request(query)
+    return services.search_products(parsed['query'],filters=parsed['filters'],session_key=session_key)
 
 
 def _resolve(query,session_key):
@@ -71,7 +73,7 @@ def _rank(r,session_key):
 
 def _search_and_offers(query,session_key):
     r,p=_resolve(query,session_key)
-    offers=services.find_shops_for_product(p['id'])['offers'] if p else []
+    offers=services.find_shops_for_product(p['id'],filters=r.get('filters'))['offers'] if p else []
     return r,p,offers
 
 

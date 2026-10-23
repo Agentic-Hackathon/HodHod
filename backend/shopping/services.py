@@ -11,6 +11,7 @@ import re
 
 from django.db import connection
 from django.db.models import Q, Exists, OuterRef
+from django.db.models.expressions import RawSQL
 from django.utils import timezone
 
 from .models import CandidateSet, Offer, Product, Shop
@@ -53,6 +54,11 @@ def validate_filters(value):
     if not isinstance(value, dict):
         raise ServiceError('filters باید یک شیء JSON باشد.')
     valid = {}
+    if value.get('price_status') in ('known','unknown'):valid['price_status']=value['price_status']
+    if 'lat' in value and 'lng' in value:
+        valid['lat'],valid['lng']=_coords(value['lat'],value['lng'])
+        valid['radius_km']=numeric(value.get('radius_km',5),minimum=.1,maximum=100)
+        if valid['radius_km'] is None:raise ServiceError('شعاع جست‌وجو نامعتبر است.')
     for field in ('brand', 'category', 'area', 'provider'):
         if value.get(field):
             valid[field] = str(value[field]).strip()[:100]
@@ -71,7 +77,7 @@ def validate_filters(value):
                 raise ServiceError('مقدار مشخصهٔ نامعتبر است.')
             specs[key]=val
         valid['specs']=specs
-    for field in ('installment','torobpay','fast_delivery'):
+    for field in ('installment','torobpay','fast_delivery','warranty','in_person'):
         if field in value:
             if not isinstance(value[field], bool):
                 raise ServiceError(f'{field} باید true یا false باشد.')
@@ -89,7 +95,15 @@ def _product_query(query, filters):
     if not terms:terms=search_terms(query)
     if not terms:raise ServiceError('عبارت جست‌وجو لازم است.')
     base=Product.objects.all()
+    indexed = False
+    if connection.vendor == 'sqlite':
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1 FROM sqlite_master WHERE name='workspace_search'")
+            indexed = cursor.fetchone() is not None
     def has(term):
+        if indexed:
+            phrase = ' AND '.join('"'+v.replace('"','""')+'"*' for v in normalize(term).split())
+            return Q(pk__in=RawSQL('SELECT rowid FROM workspace_search WHERE workspace_search MATCH %s', [phrase]))
         condition=Q(normalized_title__icontains=term) | Q(search_document__icontains=term)
         # AS228 / AS-228 are both matched even if backfill has not run.
         m=re.match(r'^([a-z]{1,8})(\d[a-z0-9]*)$',term)
@@ -143,8 +157,14 @@ def _nontext_filters(qs, filters):
             qs=qs.filter(Q(**{field:value}) | Q(**{field:int(value)}))
         else:
             qs=qs.filter(**{field:value})
-    if any(x in filters for x in ('min_price','max_price','installment','torobpay','fast_delivery','area','provider')):
+    if any(x in filters for x in ('min_price','max_price','installment','torobpay','fast_delivery','area','provider','price_status','warranty','in_person','lat')):
         offers = Offer.objects.filter(product_id=OuterRef('pk'))
+        if filters.get('price_status'):offers=offers.filter(price__isnull=filters['price_status']=='unknown')
+        if filters.get('warranty'):offers=offers.exclude(warranty='')
+        if filters.get('in_person'):offers=offers.filter(shop__extra__payment_options__icontains='in_person')
+        if 'lat' in filters:
+            nearby=[s.id for s in Shop.objects.exclude(lat=None).exclude(lng=None).only('id','lat','lng') if _haversine(filters['lat'],filters['lng'],s.lat,s.lng)<=filters['radius_km']]
+            offers=offers.filter(shop_id__in=nearby)
         if 'min_price' in filters:
             offers = offers.filter(price__gte=Decimal(str(filters['min_price'])), price_unit__iexact='toman')
         if 'max_price' in filters:
@@ -280,6 +300,12 @@ def _offer(o, distance_km=None):
             'stock_verified':False}
 
 def _filter_offer_qs(qs, filters):
+    if filters.get('price_status'):qs=qs.filter(price__isnull=filters['price_status']=='unknown')
+    if filters.get('warranty'):qs=qs.exclude(warranty='')
+    if filters.get('in_person'):qs=qs.filter(shop__extra__payment_options__icontains='in_person')
+    if 'lat' in filters:
+        nearby=[s.id for s in Shop.objects.exclude(lat=None).exclude(lng=None).only('id','lat','lng') if _haversine(filters['lat'],filters['lng'],s.lat,s.lng)<=filters['radius_km']]
+        qs=qs.filter(shop_id__in=nearby)
     if 'min_price' in filters:
         qs=qs.filter(price__gte=filters['min_price'],price_unit__iexact='toman')
     if 'max_price' in filters:
@@ -578,7 +604,37 @@ def build_shopping_plan(product_ids,lat=None,lng=None,installment=None):
             'notice':'طرح تقریبی است؛ مسیر خیابانی، زمان سفر و موجودی واقعی محاسبه یا تأیید نشده‌اند.'}
 
 
+def render_workspace(view,product_ids=None,offer_ids=None,shop_ids=None,query=None,category=None,departure=None,mode='driving',radius_km=2,shopping_minutes=10):
+    if view not in ('results','map','compare','sellers','visit','mission'):raise ServiceError('نمای درخواستی معتبر نیست.')
+    def checked(values,model,limit):
+        if values is None:return []
+        if not isinstance(values,list) or len(values)>limit:raise ServiceError('تعداد شناسه‌ها نامعتبر است.')
+        try:ids=list(dict.fromkeys(int(v) for v in values))
+        except (ValueError,TypeError):raise ServiceError('شناسه نامعتبر است.')
+        found=list(model.objects.filter(id__in=ids))
+        if len(found)!=len(ids):raise ServiceError('یکی از شناسه‌ها در دادهٔ واقعی وجود ندارد.')
+        ordered={row.id:row for row in found}
+        return [ordered[id] for id in ids]
+    products=checked(product_ids,Product,4);offers=checked(offer_ids,Offer,30);shops=checked(shop_ids,Shop,100)
+    if offers and not products:
+        products=list(Product.objects.filter(id__in=list(dict.fromkeys(o.product_id for o in offers))))
+    if view=='visit' and not offers:raise ServiceError('برای مراجعه یک آفر واقعی انتخاب کنید.')
+    result={'view':view,'source_product_ids':[p.source_id for p in products],'source_offer_ids':[(o.extra or {}).get('offer_id') for o in offers],'source_shop_ids':[s.source_id for s in shops]}
+    if view=='mission':
+        from datetime import datetime
+        if not isinstance(query,str) or not query.strip() or len(query)>100:raise ServiceError('نیاز خرید فوری را مشخص کنید.')
+        if departure:
+            try:datetime.strptime(departure,'%Y-%m-%dT%H:%M')
+            except (ValueError,TypeError):raise ServiceError('زمان حرکت نامعتبر است.')
+        if mode not in ('driving','walking'):raise ServiceError('روش رفتن نامعتبر است.')
+        radius=numeric(radius_km,minimum=.5,maximum=30)
+        if radius is None:raise ServiceError('شعاع نامعتبر است.')
+        result['mission']={'query':query,'category':str(category or '')[:100],'mode':mode,'radius':radius,'shoppingMinutes':bounded_int(shopping_minutes,10,5,60)}
+        if departure:result['mission']['departure']=departure
+    return result
+
 DISPATCH={
+    'render_workspace':render_workspace,
     'search_products':search_products,'get_facets':get_facets,'ask_clarification':ask_clarification,
     'fetch_candidates':fetch_candidates,'find_shops_for_product':find_shops_for_product,
     'compare_offers':compare_offers,'find_nearby_shops':find_nearby_shops,

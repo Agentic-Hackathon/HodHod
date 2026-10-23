@@ -1,0 +1,8 @@
+.agent-clarification { border: 1px solid var(--border-strong); border-radius: 16px; padding: 20px; margin-bottom: 20px; background: var(--surface); }
+.agent-clarification > div { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0; }
+.agent-clarification button { padding: 9px 15px; border: 1px solid var(--border); border-radius: 12px; background: var(--soft); font-size: 12px; }
+.agent-clarification button:hover { border-color: var(--accent); color: var(--accent-text); }
+.agent-clarification small { display: block; font-size: 10px; color: var(--muted); }
+.agent-error { margin: 12px; padding: 12px; border: 1px solid var(--accent); border-radius: 12px; font-size: 12px; }
+.agent-tool-activity { margin: 8px 16px; color: var(--muted); font-size: 12px; }
+.agent-tool-activity summary { cursor: pointer; padding: 8px 0; }

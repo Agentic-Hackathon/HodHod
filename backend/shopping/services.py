@@ -16,6 +16,7 @@ from django.utils import timezone
 from .models import CandidateSet, Offer, Product, Shop
 from .embedding import semantic_candidates
 from .normalization import normalize, search_terms
+from .matching import tokens as match_tokens, ranked as match_ranked, confident as match_confident, score_product as match_score
 
 MAX_CANDIDATES = 2500
 MAX_OFFERS = 50
@@ -52,7 +53,7 @@ def validate_filters(value):
     if not isinstance(value, dict):
         raise ServiceError('filters باید یک شیء JSON باشد.')
     valid = {}
-    for field in ('brand', 'category'):
+    for field in ('brand', 'category', 'area', 'provider'):
         if value.get(field):
             valid[field] = str(value[field]).strip()[:100]
     for field in ('max_price', 'min_price'):
@@ -70,7 +71,7 @@ def validate_filters(value):
                 raise ServiceError('مقدار مشخصهٔ نامعتبر است.')
             specs[key]=val
         valid['specs']=specs
-    for field in ('installment','torobpay'):
+    for field in ('installment','torobpay','fast_delivery'):
         if field in value:
             if not isinstance(value[field], bool):
                 raise ServiceError(f'{field} باید true یا false باشد.')
@@ -81,28 +82,55 @@ def validate_filters(value):
 
 
 def _product_query(query, filters):
-    nq = normalize(query)
-    if not nq:
-        raise ServiceError('عبارت جست‌وجو لازم است.')
-    qs = Product.objects.all()
-    terms = search_terms(query)
-    if connection.vendor == 'postgresql':
-        condition = Q(normalized_title__icontains=nq) | Q(search_document__icontains=nq)
-        for t in terms:
-            condition |= Q(normalized_title__trigram_similar=t)
-            if len(t) >= 3:
-                condition |= Q(search_document__icontains=t)
-        # More conservative than a generic substring match on single token, with full-term fallback.
-        if len(terms) > 1:
-            condition |= Q(search_document__contains=' '.join(terms))
-        qs = qs.filter(condition)
-    else:
-        condition = Q(normalized_title__icontains=nq) | Q(search_document__icontains=nq)
-        for t in terms[:4]:
-            condition |= Q(normalized_title__icontains=t) | Q(search_document__icontains=t)
-        qs = qs.filter(condition)
-    return _nontext_filters(qs, filters)
+    """Indexed SQL candidate retrieval: most-specific conjunction, then rare single tokens.
+    Avoid arbitrary first 2500 rows from OR-ing common words; retain model recall.
+    """
+    terms=[x for x in match_tokens(query) if len(x)>=3]
+    if not terms:terms=search_terms(query)
+    if not terms:raise ServiceError('عبارت جست‌وجو لازم است.')
+    base=Product.objects.all()
+    def has(term):
+        condition=Q(normalized_title__icontains=term) | Q(search_document__icontains=term)
+        # AS228 / AS-228 are both matched even if backfill has not run.
+        m=re.match(r'^([a-z]{1,8})(\d[a-z0-9]*)$',term)
+        if m:
+            variant=m.group(1)+' '+m.group(2)
+            condition |= Q(normalized_title__icontains=variant) | Q(search_document__icontains=variant)
+        return condition
+    significant=sorted(set(terms),key=lambda x:(bool(re.search(r'[a-z]',x) and re.search(r'\d',x)),len(x)),reverse=True)
+    if len(significant)>=2:
+        # Only pair highly distinctive terms, prefer a model anchor and a brand.
+        for first,second in [(significant[0],t) for t in significant[1:4]]:
+            qs=_nontext_filters(base.filter(has(first) & has(second)),filters)
+            if qs.exists():return qs
+    for term in significant[:6]:
+        qs=_nontext_filters(base.filter(has(term)),filters)
+        if qs.exists():return qs
+    if connection.vendor=='postgresql':
+        qs=_nontext_filters(base.filter(normalized_title__trigram_similar=normalize(query)),filters)
+        if qs.exists():return qs
+    return _nontext_filters(base.none(),filters)
 
+def _payment_offer_q(kind, expected):
+    # Imported challenge CSV stores payment_options JSON text inside Shop.extra;
+    # the legacy bool columns are often NULL. Query BOTH sources.
+    if kind=='torobpay':
+        positive=(Q(shop__torobpay=True) | (Q(shop__extra__payment_options__icontains='ترب') &
+                  Q(shop__extra__payment_options__icontains='in_person')))
+    else:
+        positive=(Q(shop__installment=True) | (Q(shop__extra__payment_options__icontains='provider_name') &
+                  ~Q(shop__extra__payment_options__exact='[]')))
+    return positive if expected else ~positive
+
+
+def _payment_shop_q(kind, expected):
+    if kind=='torobpay':
+        positive=(Q(torobpay=True) | (Q(extra__payment_options__icontains='ترب') &
+                   Q(extra__payment_options__icontains='in_person')))
+    else:
+        positive=(Q(installment=True) | (Q(extra__payment_options__icontains='provider_name') &
+                   ~Q(extra__payment_options__exact='[]')))
+    return positive if expected else ~positive
 
 def _nontext_filters(qs, filters):
     if filters.get('brand'):
@@ -115,16 +143,19 @@ def _nontext_filters(qs, filters):
             qs=qs.filter(Q(**{field:value}) | Q(**{field:int(value)}))
         else:
             qs=qs.filter(**{field:value})
-    if any(x in filters for x in ('min_price','max_price','installment','torobpay')):
+    if any(x in filters for x in ('min_price','max_price','installment','torobpay','fast_delivery','area','provider')):
         offers = Offer.objects.filter(product_id=OuterRef('pk'))
         if 'min_price' in filters:
             offers = offers.filter(price__gte=Decimal(str(filters['min_price'])), price_unit__iexact='toman')
         if 'max_price' in filters:
             offers = offers.filter(price__lte=Decimal(str(filters['max_price'])), price_unit__iexact='toman')
-        if 'installment' in filters:
-            offers = offers.filter(shop__installment=filters['installment'])
-        if 'torobpay' in filters:
-            offers = offers.filter(shop__torobpay=filters['torobpay'])
+        for kind in ('installment','torobpay'):
+            if kind in filters:offers=offers.filter(_payment_offer_q(kind,filters[kind]))
+        if 'area' in filters:offers=offers.filter(Q(shop__extra__location_label__icontains=filters['area'])|Q(shop__address__icontains=filters['area']))
+        if 'provider' in filters:offers=offers.filter(shop__extra__payment_options__icontains=filters['provider'])
+        if 'fast_delivery' in filters:
+            expression=Q(shop__extra__supports_fast_delivery__icontains='true')
+            offers=offers.filter(expression if filters['fast_delivery'] else ~expression)
         qs = qs.annotate(has_qualifying_offer=Exists(offers)).filter(has_qualifying_offer=True)
     return qs
 
@@ -141,61 +172,64 @@ def _get_set(candidate_set_id, session_key):
 
 
 def _best_match_order(products, query):
-    query_n = normalize(query)
-    words = set(search_terms(query))
-    def score(p):
-        title = p.normalized_title or normalize(p.title_fa or p.title_en)
-        document = p.search_document or normalize(' '.join([p.title_fa, p.title_en, p.brand, p.category]))
-        matched = sum(1 for w in words if w in document)
-        return (1 if query_n == title else 0, matched / max(1,len(words)),
-                1 if title.startswith(query_n) else 0,
-                SequenceMatcher(None, query_n[:130], title[:130]).ratio())
-    return sorted(products, key=score, reverse=True)
+    def doc(p):
+        return {'title':p.title_fa or p.title_en,'brand':p.brand,'category':p.category,
+                'model':p.title_en,'offer_titles':getattr(p,'offer_titles','')}
+    return sorted(products, key=lambda p: match_score(query,doc(p)),reverse=True)
 
 
 def search_products(query, filters=None, session_key=''):
-    filters = validate_filters(filters)
-    query = str(query or '').strip()[:180]
-    if not session_key:
-        raise ServiceError('شناسهٔ نشست معتبر نیست.')
-    qs = _product_query(query, filters)
-    semantic_matches = semantic_candidates(query, 250)
-    # bounded snapshot. Report capped instead of pretending this is a full-catalogue count.
-    lexical_cap=MAX_CANDIDATES - (250 if semantic_matches else 0)
-    exact_ids=list(_nontext_filters(Product.objects.filter(normalized_title=normalize(query)),filters).values_list('id',flat=True)[:10])
-    ids = list(qs.values_list('id',flat=True)[:lexical_cap+1])
-    limited = len(ids) > lexical_cap
-    ids = list(dict.fromkeys(exact_ids+ids[:lexical_cap]))[:lexical_cap]
+    filters=validate_filters(filters)
+    query=str(query or '').strip()[:300]
+    if not session_key:raise ServiceError('شناسهٔ نشست معتبر نیست.')
+    qs=_product_query(query,filters)
+    lexical_cap=1500
+    ids=list(qs.values_list('id',flat=True)[:lexical_cap+1])
+    limited=len(ids)>lexical_cap
+    ids=ids[:lexical_cap]
+    # Offer titles frequently contain model names absent from catalogue titles.
+    if len(ids)<20:
+        terms=sorted(set(x for x in match_tokens(query) if len(x)>=4),key=len,reverse=True)
+        if terms:
+            condition=Q(title__icontains=terms[0])
+            if len(terms)>1: condition |= Q(title__icontains=terms[1])
+            offer_ids=list(Offer.objects.filter(condition).values_list('product_id',flat=True).distinct()[:1000])
+            if offer_ids:
+                allowed=set(_nontext_filters(Product.objects.filter(id__in=offer_ids),filters).values_list('id',flat=True))
+                ids=list(dict.fromkeys(ids+[pid for pid in offer_ids if pid in allowed]))
     semantic_scores={}
+    semantic_matches=semantic_candidates(query,150)
     if semantic_matches:
-        # Restrict semantic hits by the SAME nontextual filters as lexical hits.
-        allowed = Product.objects.filter(pk__in=[pid for pid,_ in semantic_matches])
-        allowed = _nontext_filters(allowed,filters)
-        allowed_ids=set(allowed.values_list('id',flat=True))
-        for pid,score in semantic_matches:
-            if pid in allowed_ids:
-                semantic_scores[str(pid)] = score
-                if pid not in ids and len(ids) < MAX_CANDIDATES:
-                    ids.append(pid)
+        allowed=set(_nontext_filters(Product.objects.filter(pk__in=[p for p,_ in semantic_matches]),filters).values_list('id',flat=True))
+        for pid,sc in semantic_matches:
+            if pid in allowed:
+                semantic_scores[str(pid)]=sc
+                if pid not in ids:ids.append(pid)
+    products=list(Product.objects.filter(id__in=ids)) if ids else []
+    # Seller wording often supplies variants and model tokens missing from BaseProduct.
+    offer_titles=defaultdict(list)
     if ids:
-        products = list(Product.objects.filter(id__in=ids))
-        products = _best_match_order(products, query)
-        ids = [p.id for p in products]
-    exact = [p for p in (products if ids else []) if p.normalized_title == normalize(query)]
-    cs = CandidateSet.objects.create(session_key=session_key, query=query, filters=filters,
-                                     product_ids=ids,semantic_scores=semantic_scores,total_matches=len(ids))
-    # small bound on per-session retained sets
-    stale = list(CandidateSet.objects.filter(session_key=session_key).order_by('-created_at').values_list('id',flat=True)[25:])
-    if stale:
-        CandidateSet.objects.filter(id__in=stale).delete()
-    return {'candidate_set_id':str(cs.id), 'count':len(ids), 'count_is_lower_bound':limited,
-            'mode':'exact' if exact and len(exact)<=3 else 'discovery',
-            'exact_product_ids':[p.id for p in exact[:3]],
-            'query':query,'filters':filters,
-            'products':[_product(p) for p in products[:6]] if ids else [],
+        for pid,title in Offer.objects.filter(product_id__in=ids).values_list('product_id','title')[:5500]:
+            if title and len(offer_titles[pid])<5:offer_titles[pid].append(title)
+    ranked=match_ranked(query,[{'id':p.id,'title':p.title_fa or p.title_en,'title_en':p.title_en,
+         'brand':p.brand,'category':p.category,'model':p.title_en,
+         'offer_titles':' '.join(offer_titles[p.id])} for p in products],cutoff=.17)
+    score_by_id={x['id']:sc for sc,x in ranked}
+    ids=[x['id'] for _,x in ranked]
+    pmap={p.id:p for p in products}
+    top=[pmap[i] for i in ids]
+    # Some product-only queries should not be marked exact based merely on a substring.
+    mode='exact' if match_confident(ranked) else 'discovery'
+    cs=CandidateSet.objects.create(session_key=session_key,query=query,filters=filters,
+        product_ids=ids,semantic_scores=semantic_scores,total_matches=len(ids))
+    stale=list(CandidateSet.objects.filter(session_key=session_key).order_by('-created_at').values_list('id',flat=True)[25:])
+    if stale:CandidateSet.objects.filter(id__in=stale).delete()
+    return {'candidate_set_id':str(cs.id),'count':len(ids),'count_is_lower_bound':limited,
+            'mode':mode,'exact_product_ids':ids[:1] if mode=='exact' else [],
+            'query':query,'filters':filters,'products':[_product(p) for p in top[:6]],
+            'match_scores':[{'product_id':i,'score':score_by_id[i]} for i in ids[:6]],
             'semantic_enabled_for_query':bool(semantic_matches),
-            'notice':'اطلاعات قیمت، موجودی و ساعت کار لحظه‌ای نیستند؛ پیش از مراجعه تأیید کنید.'}
-
+            'notice':'آفر و قیمت ثبت‌شده به معنی موجودی لحظه‌ای نیست؛ پیش از مراجعه تأیید کنید.'}
 
 def _product(p):
     return {'id':p.id,'source_id':p.source_id, 'title':p.title_fa or p.title_en,
@@ -204,33 +238,59 @@ def _product(p):
             'image_url':p.image_url if p.image_url.startswith(('http://','https://')) else ''}
 
 
+def _extra_json(value):
+    if isinstance(value,(list,dict)):return value
+    if not isinstance(value,str):return None
+    try:
+        import json
+        return json.loads(value)
+    except (ValueError,TypeError):return None
+
+
 def _shop(s):
-    # Phone numbers and most names are pseudonymized in supplied challenge dataset.
-    return {'id':s.id,'name':s.name,'address':s.address,'lat':s.lat,'lng':s.lng,
-            'installment':s.installment,'torobpay':s.torobpay,
-            'working_hours':s.working_hours,'instagram':s.instagram, 'website':s.website,
-            'name_may_be_pseudonymous':not(bool(s.instagram) or bool(s.website))}
+    extra=s.extra or {}
+    payments=_extra_json(extra.get('payment_options')) or []
+    if not isinstance(payments,list):payments=[]
+    providers=[{'provider':str(x.get('provider_name','')),'channel':str(x.get('channel','unknown')),
+                'min_price_toman':x.get('min_price_toman'),'max_price_toman':x.get('max_price_toman')}
+               for x in payments if isinstance(x,dict) and x.get('provider_name')]
+    fast=extra.get('supports_fast_delivery')
+    if isinstance(fast,str):fast=fast.lower() in ('true','1','yes')
+    name_verified=bool(s.instagram or s.website)
+    return {'id':s.id,'source_id':s.source_id,
+            'name':s.name if name_verified else 'فروشگاه با شناسه '+s.source_id[-6:],
+            'address':s.address,'area':extra.get('location_label') or '',
+            'lat':s.lat,'lng':s.lng,
+            'installment':bool(providers) if s.installment is None else s.installment,
+            'torobpay':any('ترب' in x['provider'] and x['channel']=='in_person' for x in providers) if s.torobpay is None else s.torobpay,
+            'payment_options':providers,'fast_delivery':fast if isinstance(fast,bool) else None,
+            'working_hours':s.working_hours,'instagram':s.instagram,'website':s.website,
+            'name_may_be_pseudonymous':not name_verified}
 
 
 def _offer(o, distance_km=None):
-    return {'id':o.id, 'product_id':o.product_id, 'shop':_shop(o.shop),
-            'title':o.title,'price':float(o.price) if o.price is not None else None,
-            'price_unit':o.price_unit or 'نامشخص', 'warranty':o.warranty,
+    w=_extra_json(o.warranty) or o.warranty or None
+    return {'id':o.id,'source_id':(o.extra or {}).get('offer_id',''), 'product_id':o.product_id,
+            'shop':_shop(o.shop),'title':o.title,
+            'price':float(o.price) if o.price is not None else None,
+            'price_unit':o.price_unit or 'نامشخص','warranty':w,
             'updated_at':o.price_updated_at.isoformat() if o.price_updated_at else None,
             'update_age_days':round((timezone.now()-o.price_updated_at).total_seconds()/86400,1) if o.price_updated_at else None,
             'distance_km':round(distance_km,2) if distance_km is not None else None,
             'stock_verified':False}
-
 
 def _filter_offer_qs(qs, filters):
     if 'min_price' in filters:
         qs=qs.filter(price__gte=filters['min_price'],price_unit__iexact='toman')
     if 'max_price' in filters:
         qs=qs.filter(price__lte=filters['max_price'],price_unit__iexact='toman')
-    if 'installment' in filters:
-        qs=qs.filter(shop__installment=filters['installment'])
-    if 'torobpay' in filters:
-        qs=qs.filter(shop__torobpay=filters['torobpay'])
+    for kind in ('installment','torobpay'):
+        if kind in filters:qs=qs.filter(_payment_offer_q(kind,filters[kind]))
+    if 'area' in filters:qs=qs.filter(Q(shop__extra__location_label__icontains=filters['area'])|Q(shop__address__icontains=filters['area']))
+    if 'provider' in filters:qs=qs.filter(shop__extra__payment_options__icontains=filters['provider'])
+    if 'fast_delivery' in filters:
+        cond=Q(shop__extra__supports_fast_delivery__icontains='true')
+        qs=qs.filter(cond if filters['fast_delivery'] else ~cond)
     return qs
 
 
@@ -387,7 +447,8 @@ def rank_candidates(candidate_set_id, session_key, preferences=None, limit=12):
         age=(timezone.now()-latest).total_seconds()/86400 if latest else None
         freshness=math.exp(-max(0,age)/30) if age is not None else 0
         semantic=cs.semantic_scores.get(str(id))
-        relevance=(.7*text_score+.3*float(semantic)) if semantic is not None else text_score
+        match_relevance=match_score(cs.query,{'title':p.title_fa or p.title_en,'title_en':p.title_en,'brand':p.brand,'category':p.category})
+        relevance=(.85*match_relevance+.15*float(semantic)) if semantic is not None else match_relevance
         proximity=math.exp(-near[id]/10) if id in near else 0
         score=(.55*relevance+.14*coverage+.12*budget_score+.09*freshness+.10*proximity) if origin else               (.62*relevance+.15*coverage+.12*budget_score+.11*freshness)
         reasons=[]
@@ -431,14 +492,11 @@ def find_shops_for_product(product_id, filters=None):
         p=Product.objects.get(pk=int(product_id))
     except (Product.DoesNotExist,ValueError,TypeError):
         raise ServiceError('محصول یافت نشد.')
-    qs=Offer.objects.filter(product=p).select_related('shop','product')
-    if 'min_price' in filters: qs=qs.filter(price__gte=filters['min_price'],price_unit__iexact='toman')
-    if 'max_price' in filters: qs=qs.filter(price__lte=filters['max_price'],price_unit__iexact='toman')
-    if 'installment' in filters: qs=qs.filter(shop__installment=filters['installment'])
-    if 'torobpay' in filters: qs=qs.filter(shop__torobpay=filters['torobpay'])
+    qs=_filter_offer_qs(Offer.objects.filter(product=p).select_related('shop','product'),filters)
     qs=qs.order_by('price','id')
     offers=list(qs[:MAX_OFFERS+1]); limited=len(offers)>MAX_OFFERS
     return {'product':_product(p),'offers':[_offer(o) for o in offers[:MAX_OFFERS]],
+            'offer_count':len(offers[:MAX_OFFERS]),'shop_count':len({o.shop_id for o in offers[:MAX_OFFERS]}),
             'limited':limited,'notice':'آفر نشان‌دهندهٔ موجودی تأییدشده نیست؛ پیش از مراجعه استعلام کنید.'}
 
 
@@ -468,7 +526,7 @@ def find_nearby_shops(lat,lng,radius_km=5,product_id=None,installment=None):
         shops=shops.filter(offers__product_id=pid)
     if installment is not None:
         if not isinstance(installment,bool): raise ServiceError('installment باید بولی باشد.')
-        shops=shops.filter(installment=installment)
+        shops=shops.filter(_payment_shop_q('installment',installment))
     matches=[]
     for s in shops.distinct():
         d=_haversine(lat,lng,s.lat,s.lng)
@@ -490,7 +548,7 @@ def build_shopping_plan(product_ids,lat=None,lng=None,installment=None):
     offers=list(Offer.objects.filter(product_id__in=ids).select_related('shop','product').order_by('price','id')[:1200])
     if installment is not None:
         if not isinstance(installment,bool): raise ServiceError('installment باید بولی باشد.')
-        offers=[o for o in offers if o.shop.installment is installment]
+        offers=[o for o in offers if bool(_shop(o.shop)['installment']) is installment]
     byshop=defaultdict(dict)
     for o in offers:
         prior=byshop[o.shop_id].get(o.product_id)

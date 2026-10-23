@@ -37,7 +37,9 @@ def search_document(product):
     specs=product.get('specs')
     if isinstance(specs,(dict,list)):
         specs=json.dumps(specs,ensure_ascii=False,default=str)[:1000]
-    return normalize(' '.join(str(v or '') for v in [product.get('title_fa'), product.get('title_en'), product.get('brand'), product.get('category'), product.get('description','')[:500] if product.get('description') else '', specs or '']))[:2000]
+    raw = ' '.join(str(v or '') for v in [product.get('title_fa'), product.get('title_en'), product.get('brand'), product.get('category'), product.get('description','')[:500] if product.get('description') else '', specs or ''])
+    from .matching import model_keys
+    return (normalize(raw) + ' ' + ' '.join(sorted(model_keys(raw))))[:4000]
 
 
 def parse_simple_request(text):

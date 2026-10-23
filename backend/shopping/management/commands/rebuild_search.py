@@ -7,7 +7,7 @@ class Command(BaseCommand):
     def handle(self, *args, **opts):
         count, batch = 0, []
         for p in Product.objects.all().iterator(chunk_size=2000):
-            new = {'title_fa':p.title_fa,'title_en':p.title_en,'brand':p.brand,'category':p.category}
+            new = {'title_fa':p.title_fa,'title_en':p.title_en,'brand':p.brand,'category':p.category,'specs':p.specs,'description':p.description}
             p.normalized_title = normalize(p.title_fa or p.title_en)
             p.search_document = search_document(new)
             batch.append(p)

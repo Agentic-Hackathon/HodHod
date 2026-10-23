@@ -1,6 +1,7 @@
 """Provider-agnostic, bounded LLM tool calling backed ONLY by actual catalogue services."""
 import json
 from django.conf import settings
+from .agent import respond
 from . import services
 from .normalization import parse_simple_request
 from .tool_schema import openai_tools, anthropic_tools
@@ -36,8 +37,11 @@ def _tool_json(result):
 
 
 def chat(messages,session_key,location=None):
+    # Grounded search-first orchestration by default; no discretionary LLM clarifying loops.
+    if getattr(settings,'AGENT_MODE','grounded') != 'llm':
+        return respond(messages,session_key,location)
     if not settings.LLM_API_KEY:
-        return _fallback(messages,session_key,location)
+        return respond(messages,session_key,location)
     provider=settings.LLM_PROVIDER.lower()
     if provider not in ('openai','anthropic'):
         raise LLMError('LLM_PROVIDER باید openai یا anthropic باشد.')
@@ -98,13 +102,7 @@ def _openai(messages,session_key,location=None):
     thread=[{'role':'system','content':SYSTEM_PROMPT+location_note},*messages]
     events=[]
     for _ in range(6):
-        resp = client.chat.completions.create(
-            model=settings.LLM_MODEL,
-            messages=thread,
-            tools=openai_tools(),
-            tool_choice='auto',
-            max_completion_tokens=4000,
-        )
+        resp=client.chat.completions.create(model=settings.LLM_MODEL,messages=thread,tools=openai_tools(),tool_choice='auto',temperature=0.2,max_tokens=1000)
         msg=resp.choices[0].message
         if not msg.tool_calls:
             return {'reply':msg.content or 'نتایج جست‌وجو را در کارت‌های زیر ببینید.',

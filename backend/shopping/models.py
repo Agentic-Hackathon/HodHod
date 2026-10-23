@@ -1,5 +1,6 @@
-from django.db import models
 import uuid
+from django.db import models
+
 
 class Shop(models.Model):
     """فروشگاه (جدول shops). نام و شماره برای اکثر فروشگاه‌ها جعلی است؛ لوکیشن واقعی است."""

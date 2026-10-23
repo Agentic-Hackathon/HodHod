@@ -50,7 +50,7 @@ if(item.reasons&&item.reasons.length)line(body,'muted',item.reasons.join('، '))
 card.append(body);const b=el('button','subtle','دیدن فروشگاه‌ها');b.type='button';b.addEventListener('click',()=>loadOffers(p.id));card.append(b);section.append(card);});
 log.append(section);scroll();}
 async function loadOffers(productId){const wait=msg('assistant','در حال دریافت آفرهای این محصول…');try{const r=await fetch('/api/products/'+encodeURIComponent(productId)+'/offers/',{credentials:'same-origin'});const data=await r.json();if(!r.ok)throw Error(data.error||'خطا');wait.remove();const section=el('section','offers');section.append(el('div','section-title','فروشگاه‌های ثبت‌شده برای '+data.product.title));if(!data.offers.length)line(section,'muted','برای این محصول آفر ثبت‌شده‌ای پیدا نشد.');
-data.offers.slice(0,20).forEach(o=>{const c=el('article','card'),bd=el('div');bd.append(el('h3','',o.shop.name||'فروشگاه '+o.shop.id));line(bd,'muted',o.shop.address||'آدرس ثبت نشده');line(bd,'price',o.price!=null?price(o.price)+' '+o.price_unit:'قیمت نامشخص');if(o.warranty)line(bd,'muted','گارانتی: '+o.warranty);line(bd,'muted',o.updated_at?'آخرین تغییر قیمت: '+new Date(o.updated_at).toLocaleDateString('fa-IR'):'زمان به‌روزرسانی نامشخص');if(o.shop.installment===true)line(bd,'muted','خرید قسطی: اعلام شده');if(o.shop.name_may_be_pseudonymous)line(bd,'muted','نام فروشگاه ممکن است ساختگی باشد');c.append(bd);const m=linkMap(o.shop);if(m)c.append(m);section.append(c);});
+data.offers.slice(0,20).forEach(o=>{const c=el('article','card'),bd=el('div');bd.append(el('h3','',o.shop.name||'فروشگاه '+o.shop.id));line(bd,'muted',o.shop.address||'آدرس ثبت نشده');line(bd,'price',o.price!=null?price(o.price)+' '+o.price_unit:'قیمت نامشخص');if(o.warranty){const w=o.warranty;line(bd,'muted','گارانتی: '+(typeof w==='object'?[w.period_months?w.period_months+' ماه':'',w.provider||'',w.description||''].filter(Boolean).join('، '):String(w)));}line(bd,'muted',o.updated_at?'آخرین تغییر قیمت: '+new Date(o.updated_at).toLocaleDateString('fa-IR'):'زمان به‌روزرسانی نامشخص');if(o.shop.installment===true)line(bd,'muted','خرید قسطی: اعلام شده');if(o.shop.name_may_be_pseudonymous)line(bd,'muted','نام فروشگاه ممکن است ساختگی باشد');c.append(bd);const m=linkMap(o.shop);if(m)c.append(m);section.append(c);});
 line(section,'muted','وجود آفر به معنی موجودی قطعی نیست. قیمت و موجودی را پیش از مراجعه استعلام کنید.');log.append(section);scroll();}catch(e){wait.textContent=e.message;wait.classList.add('error');}}
 function showClarification(q,candidateSetId){if(!q||!q.question||!Array.isArray(q.options))return;const section=el('section','question');section.append(el('div','section-title',q.question));const opts=el('form');let key='clarification_'+Math.random().toString(36).slice(2);
 q.options.forEach((o,i)=>{const label=el('label','choice'),rad=el('input');rad.type='radio';rad.name=key;rad.value=String(i);if(!i)rad.checked=true;label.append(rad,el('span','',o.label+(o.count!=null?' ('+o.count+' محصول)':'')));opts.append(label);});
@@ -58,7 +58,26 @@ let free=null;if(q.allow_free_text){free=el('input','free');free.placeholder='ی
 const submit=el('button','', 'اعمال انتخاب');submit.type='submit';opts.append(submit);opts.addEventListener('submit',async e=>{e.preventDefault();if(busy)return;const choice=opts.querySelector('input[type="radio"]:checked');const custom=free&&free.value.trim();let val=custom!==''&&custom!=null?custom:q.options[Number(choice?.value||0)].value;if(q.field.includes('price'))val=Number(val);if(q.field.includes('price')&&(!Number.isFinite(val)||val<0)){msg('assistant','بودجهٔ معتبر وارد کنید.','error');return;}
 setBusy(true);submit.disabled=true;try{const data=await api('/api/clarify/',{candidate_set_id:candidateSetId,field:q.field,value:val});section.remove();msg('user',q.field+': '+String(val));showResponse(data);}catch(err){msg('assistant',err.message,'error');submit.disabled=false;}finally{setBusy(false);}});
 section.append(opts);log.append(section);scroll();}
-function showResponse(data){if(data.candidate_set_id)window.currentSet=data.candidate_set_id;if(data.reply)msg('assistant',data.reply);showResults(data.ranking);showClarification(data.clarification,data.candidate_set_id||window.currentSet);}
+function showInlineOffers(items){
+  if(!Array.isArray(items)||!items.length)return;
+  const section=el('section','offers');section.append(el('div','section-title','آفرهای ثبت‌شده مطابق درخواست'));
+  items.slice(0,15).forEach(o=>{
+    const card=el('article','card'),body=el('div'),shop=o.shop||{};
+    body.append(el('h3','',shop.name||'فروشگاه ثبت‌شده'));
+    line(body,'price',o.price!=null?price(o.price)+' '+(o.price_unit||'تومان'):'قیمت ثبت نشده');
+    line(body,'muted',[shop.area,shop.address].filter(Boolean).join(' · '));
+    if(o.warranty){let w=o.warranty;if(typeof w==='object')w=[w.period_months?w.period_months+' ماه':'',w.provider||'',w.description||''].filter(Boolean).join('، ');line(body,'muted','گارانتی: '+String(w));}
+    if(shop.fast_delivery===true)line(body,'muted','ارسال فوری اعلام‌شده');
+    if(Array.isArray(shop.payment_options)&&shop.payment_options.length)line(body,'muted','روش پرداخت: '+shop.payment_options.map(p=>p.provider+(p.channel==='unknown'?' (کانال نامشخص)':'')).join('، '));
+    if(o.distance_km!=null)line(body,'muted','فاصلهٔ مستقیم: '+Number(o.distance_km).toLocaleString('fa-IR')+' کیلومتر');
+    if(o.updated_at)line(body,'muted','آخرین ثبت قیمت: '+new Date(o.updated_at).toLocaleDateString('fa-IR'));
+    if(shop.name_may_be_pseudonymous)line(body,'muted','نام فروشگاه در دادهٔ مسابقه ممکن است ساختگی باشد');
+    card.append(body);const map=linkMap(shop);if(map)card.append(map);section.append(card);
+  });
+  line(section,'muted','شماره‌های دیتاست ساختگی‌اند و نمایش داده نمی‌شوند. قیمت، ساعت کار و موجودی را پیش از مراجعه تأیید کنید.');
+  log.append(section);scroll();
+}
+function showResponse(data){if(data.candidate_set_id)window.currentSet=data.candidate_set_id;if(data.reply)msg('assistant',data.reply);showResults(data.ranking);showInlineOffers(data.offers);showClarification(data.clarification,data.candidate_set_id||window.currentSet);}
 msg('assistant','سلام! چه محصولی می‌خواهید؟ نام مدل یا کاربرد و بودجه را بنویسید؛ بر اساس اطلاعات ثبت‌شده در دیتاست جست‌وجو می‌کنم.');
 document.getElementById('location').addEventListener('click',()=>{
   if(!navigator.geolocation){msg('assistant','مکان‌یابی در این مرورگر در دسترس نیست.','error');return;}

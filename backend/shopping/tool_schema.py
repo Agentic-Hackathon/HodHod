@@ -1,7 +1,7 @@
 """One shared whitelist/schema for both LLM providers; never evaluate arbitrary model output."""
 TOOLS = [
     {'name':'search_products','description':'Find real catalogue products from the Tehran dataset; returns a candidate_set_id. Use for every new product request.',
-     'properties':{'query':{'type':'string','description':'Exact product/model keywords or category in Persian or English'}, 'filters':{'type':'object','description':'Optional brand, category, min_price, max_price, installment, torobpay'},'session_id':{'type':'string'}},'required':['query']},
+     'properties':{'query':{'type':'string','description':'Exact product/model keywords or category in Persian or English'}, 'filters':{'type':'object','description':'Optional brand, category, min_price, max_price, installment, torobpay, fast_delivery, area, provider'},'session_id':{'type':'string'}},'required':['query']},
     {'name':'get_facets','description':'See candidate distribution of brands, categories, price bands to choose a useful clarification question.',
      'properties':{'candidate_set_id':{'type':'string'}},'required':['candidate_set_id']},
     {'name':'ask_clarification','description':'Suggest a data-driven one-question multi-choice clarification with high candidate-reduction potential.',

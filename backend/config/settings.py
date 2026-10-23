@@ -76,3 +76,7 @@ LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "") or None
 
 SEMANTIC_SEARCH = os.environ.get("SEMANTIC_SEARCH", "0") == "1"
 SEMANTIC_MODEL = os.environ.get("SEMANTIC_MODEL", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+
+# grounded (recommended): deterministic search-first, LLM cannot skip retrieval.
+# llm: legacy exploratory agent tool calling mode.
+AGENT_MODE = os.environ.get('AGENT_MODE','grounded')

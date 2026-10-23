@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>هدهد</title>
+<style>
+  :root{
+    --bg:#E9EEF0; --surface:#FFFFFF; --ink:#1B2A33; --muted:#66767F;
+    --line:#D3DCE0; --user:#0E5A63; --user-ink:#FFFFFF; --accent:#E0A100;
+    --err:#B3261E;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#10181C; --surface:#18232A; --ink:#E6EEF1; --muted:#8CA0AA;
+           --line:#2A3A43; --user:#17808C; --accent:#F2B90F; --err:#FF8A80; }
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:Vazirmatn,"Vazir","IRANSans",Tahoma,"Segoe UI",sans-serif;
+    font-size:16px; line-height:1.9;
+    display:flex; flex-direction:column;
+    padding-top:env(safe-area-inset-top,0);
+  }
+  header{
+    padding:12px 18px; background:var(--surface);
+    border-bottom:3px solid var(--accent);
+    display:flex; align-items:baseline; gap:10px;
+  }
+  header h1{font-size:17px;margin:0;font-weight:700}
+  header span{font-size:13px;color:var(--muted)}
+  #log{
+    flex:1; overflow-y:auto; padding:18px 14px;
+    display:flex; flex-direction:column; gap:10px;
+    max-width:760px; width:100%; margin:0 auto;
+  }
+  .msg{
+    max-width:86%; padding:8px 14px; border-radius:14px;
+    white-space:pre-wrap; overflow-wrap:anywhere;
+  }
+  .assistant{background:var(--surface); border:1px solid var(--line); align-self:flex-start; border-top-right-radius:4px}
+  .user{background:var(--user); color:var(--user-ink); align-self:flex-end; border-top-left-radius:4px}
+  .error{color:var(--err); border-color:var(--err)}
+  .typing{color:var(--muted)}
+  .typing::after{content:"…"; animation:blink 1s steps(3,end) infinite}
+  @keyframes blink{50%{opacity:.2}}
+  @media (prefers-reduced-motion: reduce){.typing::after{animation:none}}
+  form{
+    background:var(--surface); border-top:1px solid var(--line);
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom,0));
+  }
+  .row{max-width:760px; margin:0 auto; display:flex; gap:8px; align-items:flex-end}
+  textarea{
+    flex:1; resize:none; max-height:140px; min-height:46px;
+    font:inherit; color:inherit; background:var(--bg);
+    border:1px solid var(--line); border-radius:12px; padding:9px 12px;
+  }
+  textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  button{
+    font:inherit; font-weight:700; border:0; border-radius:12px;
+    background:var(--accent); color:#1B1500; padding:0 20px; height:46px; cursor:pointer;
+  }
+  button:disabled{opacity:.5; cursor:default}
+</style>
+</head>
+<body>
+<header>
+  <h1>هدهد</h1>
+  <span>دستیار خرید حضوری تهران</span>
+</header>
+
+<main id="log" aria-live="polite"></main>
+
+<form id="form" autocomplete="off">
+  <div class="row">
+    <textarea id="input" rows="1" placeholder="مثلاً: یک لپ‌تاپ برای دانشجو می‌خواهم" required></textarea>
+    <button id="send" type="submit">ارسال</button>
+  </div>
+</form>
+
+<script>
+const log = document.getElementById("log");
+const form = document.getElementById("form");
+const input = document.getElementById("input");
+const send = document.getElementById("send");
+const history = [];
+
+function csrf(){
+  const m = document.cookie.match(/csrftoken=([^;]+)/);
+  return m ? m[1] : "";
+}
+function add(role, text, cls=""){
+  const el = document.createElement("div");
+  el.className = "msg " + role + (cls ? " " + cls : "");
+  el.textContent = text;
+  log.appendChild(el);
+  log.scrollTop = log.scrollHeight;
+  return el;
+}
+function autosize(){
+  input.style.height = "auto";
+  input.style.height = Math.min(input.scrollHeight, 140) + "px";
+}
+
+add("assistant", "سلام، من هدهدم! دنبال چه محصولی هستید؟ بودجه و محدوده‌ی خرید را هم بگویید تا بهتر راهنمایی‌تان کنم.");
+
+input.addEventListener("input", autosize);
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); form.requestSubmit(); }
+});
+
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = ""; autosize();
+  add("user", text);
+  history.push({role:"user", content:text});
+  send.disabled = true;
+  const wait = add("assistant", "در حال نوشتن", "typing");
+  try {
+    const res = await fetch("/api/chat/", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","X-CSRFToken":csrf()},
+      body: JSON.stringify({messages: history}),
+    });
+    const data = await res.json();
+    wait.remove();
+    if (!res.ok) { add("assistant", data.error || "خطای ناشناخته", "error"); history.pop(); }
+    else { add("assistant", data.reply); history.push({role:"assistant", content:data.reply}); }
+  } catch (err) {
+    wait.remove();
+    add("assistant", "ارتباط با سرور برقرار نشد. دوباره تلاش کنید.", "error");
+    history.pop();
+  } finally {
+    send.disabled = false; input.focus();
+  }
+});
+</script>
+</body>
+</html>

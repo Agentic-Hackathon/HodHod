@@ -17,6 +17,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",
     "shopping",
 ]
 
@@ -55,7 +56,7 @@ DATABASES = {
         "USER": os.environ.get("POSTGRES_USER", "hodhod"),
         "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "hodhod"),
         "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
-        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+        "PORT": os.environ.get("POSTGRES_PORT", "5433"),
     }
 }
 
@@ -72,3 +73,6 @@ LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "anthropic")
 LLM_API_KEY = os.environ.get("LLM_API_KEY", "")
 LLM_MODEL = os.environ.get("LLM_MODEL", "claude-sonnet-5-5")
 LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "") or None
+
+SEMANTIC_SEARCH = os.environ.get("SEMANTIC_SEARCH", "0") == "1"
+SEMANTIC_MODEL = os.environ.get("SEMANTIC_MODEL", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")

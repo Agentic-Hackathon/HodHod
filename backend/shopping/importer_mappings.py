@@ -43,6 +43,7 @@ OFFERS = {
     "description": ["description", "desc"],
     "price": ["price_toman", "price", "offer_price"],
     "warranty": ["warranty", "guarantee", "warranty_title"],
+    "price_unit": ["price_unit", "currency", "unit"],
     "price_updated_at": ["last_price_changed_at", "price_updated_at", "updated_at"],
 }
 

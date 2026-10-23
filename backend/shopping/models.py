@@ -1,5 +1,5 @@
 from django.db import models
-
+import uuid
 
 class Shop(models.Model):
     """فروشگاه (جدول shops). نام و شماره برای اکثر فروشگاه‌ها جعلی است؛ لوکیشن واقعی است."""
@@ -38,6 +38,8 @@ class Product(models.Model):
     description = models.TextField(blank=True)
     specs = models.JSONField(null=True, blank=True)
     image_url = models.TextField(blank=True)
+    normalized_title = models.TextField(blank=True, db_index=True)
+    search_document = models.TextField(blank=True)
     extra = models.JSONField(default=dict, blank=True)
 
     def __str__(self):
@@ -59,3 +61,15 @@ class Offer(models.Model):
 
     class Meta:
         indexes = [models.Index(fields=["product", "price"])]
+
+
+class CandidateSet(models.Model):
+    """Session-bound bounded candidate snapshot. Never expose another visitor's set."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    session_key = models.CharField(max_length=80, db_index=True)
+    query = models.TextField()
+    filters = models.JSONField(default=dict)
+    product_ids = models.JSONField(default=list)
+    semantic_scores = models.JSONField(default=dict)
+    total_matches = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)

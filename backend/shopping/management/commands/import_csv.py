@@ -7,9 +7,12 @@ from decimal import Decimal, InvalidOperation
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils.dateparse import parse_datetime
+from django.utils import timezone
+from datetime import datetime
 
 from shopping.importer_mappings import MAPPINGS
 from shopping.models import Offer, Product, Shop
+from shopping.normalization import search_document, normalize, normalize_price_unit
 
 BATCH = 5000
 TRUE = {"1", "true", "yes", "y", "t", "بله", "دارد"}
@@ -59,7 +62,10 @@ def to_json(v):
 
 def to_dt(v):
     try:
-        return parse_datetime((v or "").strip())
+        value = parse_datetime((v or "").strip())
+        if value is not None and timezone.is_naive(value):
+            value = timezone.make_aware(value)
+        return value
     except ValueError:
         return None
 
@@ -108,6 +114,8 @@ class Command(BaseCommand):
                 raise CommandError("ستون shop/product در offers پیدا نشد؛ importer_mappings.py را اصلاح کنید.")
             if dry_run:
                 return
+            if table == 'offers' and not replace and Offer.objects.exists():
+                raise CommandError('Offers already exist; use --replace to avoid silently duplicating listings.')
 
             with transaction.atomic():
                 if replace:
@@ -127,6 +135,8 @@ class Command(BaseCommand):
                 data[field] = to_float(raw)
             elif field in BOOL_FIELDS:
                 data[field] = to_bool(raw)
+            elif field == "price_unit":
+                data[field] = normalize_price_unit(raw) if raw else ("toman" if cols.get("price") == "price_toman" else "unknown")
             elif field == "price":
                 data[field] = to_decimal(raw)
             elif field == "price_updated_at":
@@ -147,6 +157,9 @@ class Command(BaseCommand):
                 continue
             data = self._convert(row, cols, fields)
             data["extra"] = {k: v for k, v in row.items() if k not in used and v not in (None, "")}
+            if model is Product:
+                data["normalized_title"] = normalize(data.get("title_fa") or data.get("title_en"))
+                data["search_document"] = search_document(data)
             buf.append(model(**data))
             n += 1
             if len(buf) >= BATCH:
@@ -175,6 +188,7 @@ class Command(BaseCommand):
                 continue
             data = self._convert(row, cols, fields)
             data["extra"] = {k: v for k, v in row.items() if k not in used and v not in (None, "")}
+            data["price_unit"] = data.get("price_unit") or "unknown"
             buf.append(Offer(shop_id=shops[sid], product_id=products[pid], **data))
             n += 1
             if len(buf) >= BATCH:
